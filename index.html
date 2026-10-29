@@ -73,6 +73,17 @@ main{padding:16px 16px calc(110px + env(safe-area-inset-bottom))}
 .flip .face.back{transform:rotateY(180deg)}
 .hint{font-size:12px;color:var(--mute);text-align:center;margin-top:6px}
 .biobtn{margin-top:22px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:99px;padding:12px 22px;font-size:15px}
+.ahero{border-radius:var(--r);background:linear-gradient(180deg,#2a9d8f 0,#2a9d8f 34%,#0b3d4d 34%);color:#fff;overflow:hidden;box-shadow:0 6px 18px rgba(12,74,79,.25);margin-bottom:6px}
+.ahero .top2{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding:18px 18px 0;min-height:150px}
+.ahero small{opacity:.85;font-size:13px;display:block}
+.ahero .big{font-size:30px;font-weight:700;letter-spacing:.02em;word-break:break-all;margin:4px 0}
+.ahero .pic{width:42%;max-width:190px;aspect-ratio:3/4;border-radius:16px;background:#fff center/cover;margin-bottom:-36px;box-shadow:0 8px 20px rgba(0,0,0,.25);flex:none}
+.ahero .flds{padding:48px 18px 8px}
+.ahero .af{border-bottom:1px solid rgba(255,255,255,.25);padding:12px 0}
+.ahero .af small{text-transform:uppercase;letter-spacing:.05em;font-size:12px}
+.ahero .af div{font-size:24px;font-weight:600;text-transform:uppercase;margin-top:2px;word-break:break-word}
+.ahero .bd{padding:0 18px 16px}
+.doc .thumb{position:absolute;right:16px;bottom:14px;width:56px;height:72px;border-radius:10px;background:#fff center/cover;box-shadow:0 4px 10px rgba(0,0,0,.25);z-index:1}
 </style>
 </head>
 <body>
@@ -91,6 +102,7 @@ const TYPES = {
   amka:     {n:'ΑΜΚΑ / Υγεία',   g:['#d6336c','#8f1f48']},
   afm:      {n:'ΑΦΜ / Εφορία',   g:['#2b7cb8','#154c75']},
   insurance:{n:'Ασφάλεια',       g:['#e8590c','#9c3d08']},
+  academic: {n:'Φοιτητικό / Ακαδημαϊκό', g:['#2a9d8f','#0b3d4d']},
   other:    {n:'Άλλο έγγραφο',   g:['#495c7a','#26334a']}
 };
 function toast(m){ const t=document.createElement('div'); t.className='toast'; t.textContent=m; document.body.appendChild(t); setTimeout(()=>t.remove(),2200); }
@@ -220,7 +232,7 @@ function renderList(){
   ${items.length ? items.map(d=>{const t=TYPES[d.type]||TYPES.other; return `
     <div class="doc" data-id="${d.id}" style="background:linear-gradient(135deg,${t.g[0]},${t.g[1]})">
       <div class="t">${esc(t.n)}</div><div class="n">${esc(d.title||t.n)}</div>
-      <div class="h">${esc(d.holder||'')}</div><div class="num">${esc(maskNum(d.number))}</div>${expiryBadge(d.expiry)}
+      <div class="h">${esc(d.holder||'')}</div><div class="num">${esc(maskNum(d.number))}</div>${expiryBadge(d.expiry)}${d.photo?`<div class="thumb" style="background-image:url(${d.photo})"></div>`:''}
     </div>`}).join('') : `<div class="empty"><div class="big">🗂️</div>${DOCS.length?'Δεν βρέθηκε τίποτα.':'Δεν έχεις έγγραφα ακόμα.<br>Πάτα «Προσθήκη» για να ξεκινήσεις.'}</div>`}
   <p class="note">Προσωπική, κρυπτογραφημένη αποθήκευση στη συσκευή σου.<br>Δεν αποτελεί επίσημο έγγραφο και δεν συνδέεται με το Δημόσιο.</p></main>
   <button class="fab" id="add">＋ Προσθήκη</button>`;
@@ -245,9 +257,11 @@ function openDetail(id){
   const d=DOCS.find(x=>x.id===id); if(!d) return; const t=TYPES[d.type]||TYPES.other;
   const kv=(k,v,copy)=>v?`<div class="kv"><small>${k}</small><div ${copy?`data-copy="${esc(v)}" style="cursor:pointer"`:''}>${esc(v)}</div></div>`:'';
   const s=sheet(d.title||t.n, `
-    <div class="doc" style="background:linear-gradient(135deg,${t.g[0]},${t.g[1]});cursor:default">
+    ${d.type==='academic'?`<div class="ahero"><div class="top2"><div><small>Κωδικός</small><div class="big">${esc(d.number||'—')}</div></div>${d.photo?`<div class="pic" style="background-image:url(${d.photo})"></div>`:''}</div>
+      <div class="flds">${[['Όνομα',d.nameEl],['Επώνυμο',d.surnameEl],['Name',d.nameEn],['Surname',d.surnameEn],['Ακαδημαϊκή ιδιότητα',d.status],['Τμήμα / Ίδρυμα',d.institution]].filter(x=>x[1]).map(([k,v])=>`<div class="af"><small>${k}</small><div>${esc(v)}</div></div>`).join('')}</div>
+      <div class="bd">${expiryBadge(d.expiry)}</div></div>`:`<div class="doc" style="background:linear-gradient(135deg,${t.g[0]},${t.g[1]});cursor:default">
       <div class="t">${esc(t.n)}</div><div class="n">${esc(d.title||t.n)}</div><div class="h">${esc(d.holder||'')}</div>
-      <div class="num">${esc(d.number||'')}</div>${expiryBadge(d.expiry)}</div>
+      <div class="num">${esc(d.number||'')}</div>${expiryBadge(d.expiry)}</div>`}
     ${kv('Αριθμός (πάτα για αντιγραφή)',d.number,true)}${kv('Κάτοχος',d.holder)}${kv('Έκδοση',d.issued&&new Date(d.issued).toLocaleDateString('el-GR'))}${kv('Λήξη',d.expiry&&new Date(d.expiry).toLocaleDateString('el-GR'))}${kv('Σημειώσεις',d.notes)}
     ${(d.front||d.back)?`<div class="flip" id="flip"><div class="fi"><div class="face" style="background-image:url(${d.front||d.back})"></div><div class="face back" style="background-image:url(${d.back||d.front})"></div></div></div><div class="hint">${d.front&&d.back?'Πάτα για αναστροφή · ':''}</div><button class="btn sec" id="full" style="margin-top:8px">🔍 Πλήρης οθόνη</button>`:''}
     ${d.expiry?'<button class="btn sec" id="ics">📅 Υπενθύμιση λήξης στο ημερολόγιο</button>':''}
@@ -281,6 +295,15 @@ function openForm(d){
   const s=sheet(d?'Επεξεργασία':'Νέο έγγραφο', `
     <label class="lbl">Τύπος</label><select class="inp" id="type">${Object.entries(TYPES).map(([k,v])=>`<option value="${k}" ${doc.type===k?'selected':''}>${v.n}</option>`).join('')}</select>
     ${PROFILES.length>1?`<label class="lbl">Προφίλ</label><select class="inp" id="profile">${PROFILES.map(p=>`<option ${((doc.profile||PROFILES[0])===p)?'selected':''}>${esc(p)}</option>`).join('')}</select>`:''}
+    <div id="acad" style="display:${doc.type==='academic'?'block':'none'}">
+      <label class="lbl">Φωτογραφία προσώπου</label><div class="imgs"><div class="imgslot" id="sp" style="aspect-ratio:3/4">+ Φωτογραφία</div></div>
+      <label class="lbl">Όνομα (ελληνικά)</label><input class="inp" id="nameEl" value="${esc(doc.nameEl||'')}">
+      <label class="lbl">Επώνυμο (ελληνικά)</label><input class="inp" id="surnameEl" value="${esc(doc.surnameEl||'')}">
+      <label class="lbl">Name (Latin)</label><input class="inp" id="nameEn" value="${esc(doc.nameEn||'')}">
+      <label class="lbl">Surname (Latin)</label><input class="inp" id="surnameEn" value="${esc(doc.surnameEn||'')}">
+      <label class="lbl">Ακαδημαϊκή ιδιότητα</label><input class="inp" id="status" value="${esc(doc.status||'')}" placeholder="π.χ. Προπτυχιακός">
+      <label class="lbl">Τμήμα / Ίδρυμα</label><input class="inp" id="institution" value="${esc(doc.institution||'')}">
+    </div>
     <label class="lbl">Τίτλος</label><input class="inp" id="title" value="${esc(doc.title||'')}" placeholder="π.χ. Ταυτότητα μου">
     <label class="lbl">Κάτοχος</label><input class="inp" id="holder" value="${esc(doc.holder||'')}">
     <label class="lbl">Αριθμός</label><input class="inp" id="number" value="${esc(doc.number||'')}" autocomplete="off">
@@ -291,12 +314,12 @@ function openForm(d){
     <input type="file" accept="image/*" id="file" hidden>
     <button class="btn" id="save">Αποθήκευση</button>`);
   const file=$('#file',s); let target=null;
-  function paint(){ [['front','sf','+ Μπροστά'],['back','sb','+ Πίσω']].forEach(([k,id,l])=>{ const e=$('#'+id,s); if(doc[k]){ e.className='imgslot has'; e.style.backgroundImage=`url(${doc[k]})`; e.innerHTML=`<button class="x" data-rm="${k}">×</button>`; } else { e.className='imgslot'; e.style.backgroundImage=''; e.textContent=l; } }); }
-  paint();
-  s.addEventListener('click',e=>{ const rm=e.target.dataset?.rm; if(rm){ e.stopPropagation(); delete doc[rm]; paint(); return; } const sl=e.target.closest('.imgslot'); if(sl && !sl.classList.contains('has')){ target = sl.id==='sf'?'front':'back'; file.click(); } });
+  function paint(){ [['front','sf','+ Μπροστά'],['back','sb','+ Πίσω'],['photo','sp','+ Φωτογραφία']].forEach(([k,id,l])=>{ const e=$('#'+id,s); if(doc[k]){ e.className='imgslot has'; e.style.backgroundImage=`url(${doc[k]})`; e.innerHTML=`<button class="x" data-rm="${k}">×</button>`; } else { e.className='imgslot'; e.style.backgroundImage=''; e.textContent=l; } }); }
+  paint(); $('#type',s).onchange=e=>{ $('#acad',s).style.display=e.target.value==='academic'?'block':'none'; };
+  s.addEventListener('click',e=>{ const rm=e.target.dataset?.rm; if(rm){ e.stopPropagation(); delete doc[rm]; paint(); return; } const sl=e.target.closest('.imgslot'); if(sl && !sl.classList.contains('has')){ target = sl.id==='sf'?'front':sl.id==='sp'?'photo':'back'; file.click(); } });
   file.onchange=async()=>{ if(file.files[0]&&target){ try{ doc[target]=await compress(file.files[0]); paint(); }catch(e){ toast('Αδυναμία ανάγνωσης εικόνας'); } } file.value=''; };
   $('#save',s).onclick=async()=>{
-    Object.assign(doc,{type:$('#type',s).value,title:$('#title',s).value.trim(),holder:$('#holder',s).value.trim(),number:$('#number',s).value.trim(),issued:$('#issued',s).value,expiry:$('#expiry',s).value,notes:$('#notes',s).value.trim(),profile:$('#profile',s)?.value||doc.profile||PROFILES[0]});
+    Object.assign(doc,{type:$('#type',s).value,title:$('#title',s).value.trim(),holder:$('#holder',s).value.trim(),number:$('#number',s).value.trim(),issued:$('#issued',s).value,expiry:$('#expiry',s).value,notes:$('#notes',s).value.trim(),nameEl:$('#nameEl',s).value.trim(),surnameEl:$('#surnameEl',s).value.trim(),nameEn:$('#nameEn',s).value.trim(),surnameEn:$('#surnameEn',s).value.trim(),status:$('#status',s).value.trim(),institution:$('#institution',s).value.trim(),profile:$('#profile',s)?.value||doc.profile||PROFILES[0]});
     if(!doc.title) doc.title=TYPES[doc.type].n;
     const i=DOCS.findIndex(x=>x.id===doc.id); if(i>=0) DOCS[i]=doc; else DOCS.unshift(doc);
     await persist(); s.remove(); renderList(); toast('Αποθηκεύτηκε');
